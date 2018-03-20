@@ -19,24 +19,31 @@ import com.badlogic.gdx.utils.TimeUtils;
 
 public class GameScreen implements Screen {
     Player player;
+    Array<Enemy> enemies = new Array<Enemy>();
     Array<Bullet> bullets = new Array<Bullet>();
     World world;
     SpriteBatch batch;
     Box2DDebugRenderer b2dr;
     Camera camera;
     long reload = TimeUtils.nanoTime();
-    //public boolean
+    long enemyTime = TimeUtils.nanoTime();
 
     @Override
     public void show() {
         world = new World(new Vector2(0,0), false);
-        /*world.setContactListener(new ContactListener() {
+        world.setContactListener(new ContactListener() {
             @Override
             public void beginContact(Contact contact) {
                 Fixture fa = contact.getFixtureA(), fb = contact.getFixtureB();
-                if((fa.getUserData() == "bullet" && fb.getUserData() == "player")
-                        || (fb.getUserData() == "bullet" && fa.getUserData() == "player")){
-
+                if((fa.getUserData() == "bullet" && fb.getUserData() == "enemy")
+                        || (fb.getUserData() == "bullet" && fa.getUserData() == "enemy")){
+                    Gdx.app.log("Damage", "+");
+                    for(Bullet bullet : bullets)
+                        if(bullet.body == fa || bullet.body == fb)
+                            bullet.inGame = false;
+                    for(Enemy enemy : enemies)
+                        if(enemy.body == fa || enemy.body == fb)
+                            enemy.damaged();
                 }
             }
             @Override
@@ -45,28 +52,40 @@ public class GameScreen implements Screen {
             public void preSolve(Contact contact, Manifold oldManifold) {}
             @Override
             public void postSolve(Contact contact, ContactImpulse impulse) {}
-        });*/
+        });
         b2dr = new Box2DDebugRenderer();
         player = new Player(world);
-        camera = new Camera(player.body.getPosition());
+        camera = new Camera(player.body.getBody().getPosition());
         batch = new SpriteBatch();
     }
 
     @Override
     public void render(float delta) {
         //Update
-        world.step(1000f, 6, 2);
+        world.step(1/60f, 6, 2);
+        batch.setProjectionMatrix(camera.camera.combined);
         b2dr.render(world, camera.camera.combined);
         player.update(delta);
+        camera.update(player.body.getBody().getPosition());
         if((player.bulletRot.x != 0 || player.bulletRot.y != 0)
                 && MathUtils.nanoToSec*(TimeUtils.nanoTime()-reload) >= 60/Constants.SHOOT_RATE){
             reload = TimeUtils.nanoTime();
-            bullets.add(new Bullet(player.bulletRot, world, player.body.getPosition()));
+            bullets.add(new Bullet(player.bulletRot, world, player.body.getBody().getPosition()));
+        }
+        if(MathUtils.nanoToSec*(TimeUtils.nanoTime()-enemyTime) > 1){
+            enemyTime = TimeUtils.nanoTime();
+            enemies.add(new Enemy(world));
+            Gdx.app.log("Enemies", "+1");
         }
         for(Bullet bullet : bullets){
             bullet.update(delta);
             if(!bullet.inGame)
                 bullets.removeValue(bullet, false);
+        }
+        for(Enemy enemy : enemies){
+            enemy.update(delta);
+            if(!enemy.inGame)
+                enemies.removeValue(enemy, false);
         }
 
         //Render
@@ -76,6 +95,8 @@ public class GameScreen implements Screen {
         player.render(batch);
         for(Bullet bullet : bullets)
             bullet.render(batch);
+        for(Enemy enemy : enemies)
+            enemy.render(batch);
         batch.end();
 
         //Game Over
