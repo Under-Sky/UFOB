@@ -1,5 +1,6 @@
 package ru.itlab;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
@@ -19,8 +20,8 @@ public class Enemy {
     public int live = 9;
     String path;
 
-    public Enemy(World world){
-        body = Utils.createBox(world, rand(),
+    public Enemy(World world, Vector2 pos){
+        body = Utils.createBox(world, rand(pos),
                 E_SIZE.x, E_SIZE.y, false, "enemy");
         switch((int)Math.random()*(4)+1){
             case 1:path = "PNG/green";break;
@@ -29,14 +30,17 @@ public class Enemy {
             case 4:path = "PNG/yellow";break;
         }
         texture = new Texture(path + "1.png");
-        calcRot();
+        calcRot(pos);
     }
 
-    public void update(float delta){
+    public void update(float delta, Vector2 pos){
         body.getBody().setLinearVelocity(delta*E_SPEED*rot.x, delta*E_SPEED*rot.y);
-        if(body.getBody().getPosition().x > C_VISION.x*2 || body.getBody().getPosition().y > C_VISION.y*2
-                || body.getBody().getPosition().x < 0 || body.getBody().getPosition().y < 0)
+        if(body.getBody().getPosition().x > pos.x+C_VISION.x*1.5
+                || body.getBody().getPosition().y > pos.y+C_VISION.y*1.5
+                || body.getBody().getPosition().x < pos.x-C_VISION.x*1.5
+                || body.getBody().getPosition().y < pos.y-C_VISION.y*1.5)
             inGame = false;
+        if(!inGame) Gdx.app.log("Bullet", "deleted");
     }
     public void render(SpriteBatch batch){
         batch.draw(texture,
@@ -46,7 +50,7 @@ public class Enemy {
                 E_SIZE.y);
     }
 
-    public Vector2 rand(){
+    public Vector2 rand(Vector2 pos){
         float x,y;
         do{
             x = (float) (Math.random()*C_VISION.x*3-C_VISION.x);
@@ -54,19 +58,19 @@ public class Enemy {
         do{
             y = (float) (Math.random()*C_VISION.y*3-C_VISION.y);
         }while((y < C_VISION.y || y > C_VISION.y*2) && y > 0);
-        return new Vector2(x,y);
+        return new Vector2(x+pos.x,y+pos.y);
     }
-    public void calcRot(){
+    public void calcRot(Vector2 pos){
         float x = body.getBody().getPosition().x, y = body.getBody().getPosition().y;
-        if(x > C_VISION.x)
+        if(x > C_VISION.x/2+pos.x)
             rot.x = -1;
-        else if(x < 0)
+        else if(x < pos.x-C_VISION.x/2)
             rot.x = 1;
         else rot.x = 0;
 
-        if(y > C_VISION.y)
+        if(y > C_VISION.y/2+pos.y)
             rot.y = -1;
-        else if(y < 0)
+        else if(y < pos.y-C_VISION.y/2)
             rot.y = 1;
         else rot.y = 0;
     }
@@ -74,11 +78,11 @@ public class Enemy {
     public void damaged(){
         live--;
         if(live > 6)
-            texture = new Texture("PNG/blue1.png");
+            texture = new Texture("PNG/green1.png");
         else if(live > 3)
-            texture = new Texture("PNG/blue1.png");
+            texture = new Texture("PNG/green2.png");
         else if(live > 0)
-            texture = new Texture("PNG/blue1.png");
+            texture = new Texture("PNG/green3.png");
         else inGame = false;
     }
 }

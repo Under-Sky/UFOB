@@ -27,6 +27,7 @@ public class GameScreen implements Screen {
     Camera camera;
     long reload = TimeUtils.nanoTime();
     long enemyTime = TimeUtils.nanoTime();
+    Fixture lastFixtureA, lastFixtureB;
 
     @Override
     public void show() {
@@ -35,8 +36,9 @@ public class GameScreen implements Screen {
             @Override
             public void beginContact(Contact contact) {
                 Fixture fa = contact.getFixtureA(), fb = contact.getFixtureB();
-                if((fa.getUserData() == "bullet" && fb.getUserData() == "enemy")
-                        || (fb.getUserData() == "bullet" && fa.getUserData() == "enemy")){
+                if(((fa.getUserData() == "bullet" && fb.getUserData() == "enemy")
+                        || (fb.getUserData() == "bullet" && fa.getUserData() == "enemy"))
+                        && (lastFixtureA != fa || lastFixtureB != fb)) {
                     Gdx.app.log("Damage", "+");
                     for(Bullet bullet : bullets)
                         if(bullet.body == fa || bullet.body == fb)
@@ -45,6 +47,8 @@ public class GameScreen implements Screen {
                         if(enemy.body == fa || enemy.body == fb)
                             enemy.damaged();
                 }
+                lastFixtureA = fa;
+                lastFixtureB = fb;
             }
             @Override
             public void endContact(Contact contact) {}
@@ -61,12 +65,13 @@ public class GameScreen implements Screen {
 
     @Override
     public void render(float delta) {
+        Gdx.gl.glClearColor(0, 0, 0, 1f);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         //Update
-        world.step(1/60f, 6, 2);
+        world.step(10f, 6, 2);
         batch.setProjectionMatrix(camera.camera.combined);
         b2dr.render(world, camera.camera.combined);
         player.update(delta);
-        camera.update(player.body.getBody().getPosition());
         if((player.bulletRot.x != 0 || player.bulletRot.y != 0)
                 && MathUtils.nanoToSec*(TimeUtils.nanoTime()-reload) >= 60/Constants.SHOOT_RATE){
             reload = TimeUtils.nanoTime();
@@ -74,16 +79,15 @@ public class GameScreen implements Screen {
         }
         if(MathUtils.nanoToSec*(TimeUtils.nanoTime()-enemyTime) > 1){
             enemyTime = TimeUtils.nanoTime();
-            enemies.add(new Enemy(world));
-            Gdx.app.log("Enemies", "+1");
+            enemies.add(new Enemy(world, player.body.getBody().getPosition()));
         }
         for(Bullet bullet : bullets){
-            bullet.update(delta);
+            bullet.update(delta, player.body.getBody().getPosition());
             if(!bullet.inGame)
                 bullets.removeValue(bullet, false);
         }
         for(Enemy enemy : enemies){
-            enemy.update(delta);
+            enemy.update(delta, player.body.getBody().getPosition());
             if(!enemy.inGame)
                 enemies.removeValue(enemy, false);
         }
@@ -93,14 +97,12 @@ public class GameScreen implements Screen {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         batch.begin();
         player.render(batch);
+        camera.update(player.body.getBody().getPosition());
         for(Bullet bullet : bullets)
             bullet.render(batch);
         for(Enemy enemy : enemies)
             enemy.render(batch);
         batch.end();
-
-        //Game Over
-        if(Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE))Gdx.app.exit();
     }
 
     @Override
