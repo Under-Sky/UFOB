@@ -17,6 +17,8 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
 
+import static ru.itlab.Constants.SCORE;
+
 public class GameScreen implements Screen {
     Player player;
     Array<Enemy> enemies = new Array<Enemy>();
@@ -88,8 +90,10 @@ public class GameScreen implements Screen {
         }
         for(Enemy enemy : enemies){
             enemy.update(delta, player.body.getBody().getPosition());
-            if(!enemy.inGame)
+            if(!enemy.inGame) {
                 enemies.removeValue(enemy, false);
+                SCORE++;
+            }
         }
 
         //Render
