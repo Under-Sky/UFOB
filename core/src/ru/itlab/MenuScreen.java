@@ -18,9 +18,9 @@ public class MenuScreen implements Screen {
     @Override
     public void show(){
         batch = new SpriteBatch();
-        texture = new Texture("background.png");
-        scale = (C_VISION.y * texture.getWidth()) / texture.getHeight();
-        drawX = texture.getWidth() / 2 - C_VISION.x * PPM / 2;
+        texture = new Texture("badfround.jpg");
+        scale = C_VISION.y * texture.getWidth() / texture.getHeight();
+        drawX = (scale - C_VISION.x) * PPM / 2 * -1;
     }
 
     @Override

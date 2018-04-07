@@ -25,7 +25,7 @@ public class MainActivity extends Game {
 			setScreen(ms);
 			//stopMusic(true);
 		}
-		if(Gdx.input.isButtonPressed(Input.Keys.ENTER) && getScreen()==ms) {
+		if(Gdx.input.isTouched() && getScreen()==ms) {
 			setScreen(gs);
 			//stopMusic(false);
 		}
