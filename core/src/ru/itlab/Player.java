@@ -19,7 +19,7 @@ public class Player {
 
     public Player(World world){
         body = Utils.createBox(world, (C_VISION.x - C_SIZE.x)/2, (C_VISION.y - C_SIZE.y)/2,
-                C_SIZE.x, C_SIZE.y, false, "player");
+                C_SIZE.x, C_SIZE.y, false, "player", (short)1);
         texture = new Texture("PNG/blue1.png");
     }
 

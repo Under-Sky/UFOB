@@ -17,6 +17,7 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
 
+import static ru.itlab.Constants.C_SIZE;
 import static ru.itlab.Constants.SCORE;
 
 public class GameScreen implements Screen {
@@ -27,6 +28,7 @@ public class GameScreen implements Screen {
     SpriteBatch batch;
     Box2DDebugRenderer b2dr;
     Camera camera;
+    BackgroundRenderer backRend;
     long reload = TimeUtils.nanoTime();
     long enemyTime = TimeUtils.nanoTime();
     Fixture lastFixtureA, lastFixtureB;
@@ -38,8 +40,10 @@ public class GameScreen implements Screen {
             @Override
             public void beginContact(Contact contact) {
                 Fixture fa = contact.getFixtureA(), fb = contact.getFixtureB();
-                if(((fa.getUserData() == "bullet" && fb.getUserData() == "enemy")
-                        || (fb.getUserData() == "bullet" && fa.getUserData() == "enemy"))
+                if(fa.getUserData()==null || fb.getUserData()==null)
+                    return;
+                if(((fa.getUserData().equals("bullet") && fb.getUserData().equals( "enemy"))
+                        || (fb.getUserData().equals("bullet") && fa.getUserData().equals("enemy")))
                         && (lastFixtureA != fa || lastFixtureB != fb)) {
                     Gdx.app.log("Damage", "+");
                     for(Bullet bullet : bullets)
@@ -63,6 +67,8 @@ public class GameScreen implements Screen {
         player = new Player(world);
         camera = new Camera(player.body.getBody().getPosition());
         batch = new SpriteBatch();
+        backRend = new BackgroundRenderer(new Vector2(player.body.getBody().getPosition().x + C_SIZE.x/2,
+                player.body.getBody().getPosition().y + C_SIZE.y/2));
     }
 
     @Override
@@ -74,6 +80,8 @@ public class GameScreen implements Screen {
         batch.setProjectionMatrix(camera.camera.combined);
         b2dr.render(world, camera.camera.combined);
         player.update(delta);
+        backRend.update(new Vector2(player.body.getBody().getPosition().x + C_SIZE.x/2,
+                player.body.getBody().getPosition().y + C_SIZE.y/2));
         if((player.bulletRot.x != 0 || player.bulletRot.y != 0)
                 && MathUtils.nanoToSec*(TimeUtils.nanoTime()-reload) >= 60/Constants.SHOOT_RATE){
             reload = TimeUtils.nanoTime();
@@ -100,6 +108,7 @@ public class GameScreen implements Screen {
         Gdx.gl.glClearColor(0, 0, 0, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         batch.begin();
+        backRend.render(batch);
         player.render(batch);
         camera.update(player.body.getBody().getPosition());
         for(Bullet bullet : bullets)
@@ -133,5 +142,6 @@ public class GameScreen implements Screen {
     public void dispose() {
         world.dispose();
         batch.dispose();
+        b2dr.dispose();
     }
 }

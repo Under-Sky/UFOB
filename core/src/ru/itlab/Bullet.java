@@ -23,7 +23,7 @@ public class Bullet {
 
     public Bullet(Vector2 rot, World world, Vector2 pos){
         this.rot = rot;
-        body = Utils.createBox(world, check(pos).x, check(pos).y, B_SIZE.x, B_SIZE.y, false, "bullet");
+        body = Utils.createBox(world, check(pos).x, check(pos).y, B_SIZE.x, B_SIZE.y, false, "bullet", (short)0);
         texture = new Texture("bullet.png");
         sprite = new Sprite(texture);
 
